@@ -246,16 +246,59 @@ const Table: React.FC = () => {
                             zIndex="200"
                             marginLeft={2}
                         >
-                            {player.cards?.map((card, index) => {
-                            return (
-                                <PokerCard
-                                    key={index}
-                                    height="90px" 
-                                    width="60px"
-                                    fontSize="xx-large"
-                                    transform="rotate(20deg)"
-                                    datavalue={`${card[0]} ${card[1]}`}
-                                />
+                            {player.cards?.map((card: string, index) => {
+                                const value = card.split('')[0]
+                                const naipe = card.split('')[1]
+
+                                let datavalue = ''
+                                let color = ''
+
+                                if (naipe === 'd' || naipe === 'h') {
+                                    if (value === 'T' && naipe === 'h') {
+                                        datavalue = '10 ♥'
+                                    } else if (value === 'T' && naipe === 'd') {
+                                        datavalue = '10 ♦'
+                                    } else if (naipe === 'h') {
+                                        datavalue = `${value} ♥`
+                                    } else if (naipe === 'd') {
+                                        datavalue = `${value} ♦`
+                                    }
+                                    color = 'red.500'
+                                } else if (naipe === 'c' || naipe === 's') {
+                                    if (value === 'T' && naipe === 'c') {
+                                        datavalue = '10 ♣'
+                                    } else if (value === 'T' && naipe === 's') {
+                                        datavalue = '10 ♠'
+                                    } else if (naipe === 's') {
+                                        datavalue = `${value} ♠`
+                                    } else if (naipe === 'c') {
+                                        datavalue = `${value} ♣`
+                                    }
+                                    color = 'black'
+                                }
+
+                                return (
+                                    <Box
+                                        display="flex"
+                                        alignItems="center"
+                                        justifyContent="center"
+                                        backgroundColor="white"
+                                        color={color}
+                                        borderColor={color}
+                                        border="solid 2px"
+                                        borderRadius="lg"
+                                        fontSize="xx-large"
+                                        userSelect="none"
+                                        key={index}
+                                        height="90px" 
+                                        width="60px"
+                                        transform="rotate(20deg)"
+                                        _before={{ position: 'absolute', content: 'attr(data-value)', fontSize: '16px', top: '8px', left: '8px' }}
+                                        _after={{ position: 'absolute', content: 'attr(data-value)', fontSize: '16px', bottom:  '8px', right: '8px', transform: 'rotate(180deg)' }}
+                                        data-value={datavalue}
+                                    >
+                                        {datavalue.split(' ')[1]}
+                                    </Box>
                                 )
                             })}
                         </Box>
