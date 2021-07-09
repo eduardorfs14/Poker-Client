@@ -66,6 +66,7 @@ export default function Home() {
         <Input
           {...register('password')}
           name="password"
+          type="password"
           placeholder="Senha"
           marginTop={2}
         />

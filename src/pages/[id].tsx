@@ -9,7 +9,6 @@ import { supabase } from "../utils/supabaseClient";
 import { useRouter } from "next/router";
 import { AuthContext } from "../contexts/auth/AuthContext";
 import { io, Socket } from "socket.io-client";
-import { UserAvatarInGame } from "../components/UserAvatarInGame";
 
 type TableType = {
     id: string;
@@ -25,8 +24,9 @@ type Player = {
     id: string;
     email: string;
     balance: number;
-    avatar: string;
     position: string;
+    folded: boolean;
+    avatarURL: string;
     cards: string[]
 }
 
@@ -68,6 +68,7 @@ const Table: React.FC = () => {
             socket.on('combination', combination => setCombination(combination));
             socket.on('round_pot', pot => setGameMsg(`POT: ${pot}P$`));
             socket.on('bet_response', msg => addToast(msg));
+            socket.on('your_turn', () => addToast('Sua vez de jogar!', 'info'));
             socket.on('error_msg', msg => addToast(msg, 'error'));
             socket.on('winner', async winnerId => {
                 const { data } = await supabase
@@ -170,7 +171,6 @@ const Table: React.FC = () => {
                         <Flex
                             key={player.id}
                             position="relative"
-                            className={player.position.toLowerCase()}
                             width="80px"
                             borderRadius="48px"
                             alignSelf="flex-end"
@@ -191,7 +191,7 @@ const Table: React.FC = () => {
                                 border="solid 4px #ddd"
                                 width="60px"
                                 height="60px"
-                                src={player.avatar}
+                                src={player.avatarURL}
                                 >
                                 </Avatar>
                                 {player.balance}
@@ -203,7 +203,6 @@ const Table: React.FC = () => {
                 {player && (
                     <Flex
                         position="relative"
-                        className={player.position.toLowerCase()}
                         width="380px"
                         borderRadius="48px"
                         alignSelf="flex-end"
@@ -216,7 +215,7 @@ const Table: React.FC = () => {
                           border="solid 4px #ddd"
                           width="60px"
                           height="60px"
-                          src={player.avatar}
+                          src={player.avatarURL}
                         >
                         </Avatar>
                         <Box

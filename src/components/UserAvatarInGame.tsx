@@ -15,13 +15,9 @@ type UserAvatarInGameProps = {
 }
 
 export function UserAvatarInGame({ user, isMe }: UserAvatarInGameProps) {
-  useEffect(() => {
-    console.log(user);
-  }, [])
   return (
     <Flex
       position="relative"
-      className={user.position?.toLowerCase()}
       width={isMe ? '350px' : '200px'}
       borderRadius="48px"
       alignSelf={isMe ? 'flex-end': 'flex-center'}

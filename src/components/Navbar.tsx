@@ -10,9 +10,17 @@ import { supabase } from "../utils/supabaseClient";
 const Navbar: React.FC<FlexProps> = (props) => {
   const { user, signOut } = useContext(AuthContext);
   const [stateUser, setUser] = useState(user);
+
   useEffect(() => {
     setUser(user);
-  }, [user])
+  }, [user]);
+
+  async function getBalance() {
+    const { data } = await supabase.from('users').select().eq('id', user?.id);
+    if (data) {
+      setUser(data[0]);
+    }
+  }
 
   if (!user) {
     return (
@@ -98,6 +106,8 @@ const Navbar: React.FC<FlexProps> = (props) => {
         marginRight={12}
         padding={2}
         borderRadius="sm"
+        _hover={{ color: "purple.500", cursor: "pointer" }}
+        onClick={getBalance}
       >
         {stateUser?.balance}P$
       </Text>
