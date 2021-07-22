@@ -61,7 +61,7 @@ export const AuthProvider: React.FC = ({ children }) => {
     if (error) throw error;
   }
 
-  async function signUp({ email, password }: SignUpRequestData) {
+  async function signUp({ name, email, password }: SignUpRequestData) {
     const { error, user } = await supabase.auth.signUp({ email, password });
 
     if (error) throw error;
@@ -70,6 +70,7 @@ export const AuthProvider: React.FC = ({ children }) => {
       {
         id: user?.id,
         email: user?.email, 
+        name,
       }
     ]).throwOnError();
   }

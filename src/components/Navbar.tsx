@@ -98,7 +98,7 @@ const Navbar: React.FC<FlexProps> = (props) => {
         padding={2}
         borderRadius="sm"
       >
-        {stateUser?.email}
+        {stateUser?.name}
       </Text>
 
       <Text

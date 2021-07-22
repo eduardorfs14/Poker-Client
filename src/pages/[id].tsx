@@ -22,6 +22,7 @@ type TableType = {
 
 type Player = {
     id: string;
+    name: string;
     email: string;
     balance: number;
     position: string;
@@ -33,11 +34,12 @@ type Player = {
 const Table: React.FC = () => {
     const { user } = useContext(AuthContext);
 
-    const [betInputValue, setBetInputValue] = useState(`0`);
+    const [betInputValue, setBetInputValue] = useState('0');
     const [socket, setSocket] = useState<Socket>();
     const [player, setPlayer] = useState<Player>();
     const [players, setPlayers] = useState<Player[]>();
     const [gameMsg, setGameMsg] = useState('');
+    const [turnMsg, setTurnMsg] = useState('');
     const [table, setTable] = useState<TableType | null>(null);
     const [tableCards, setTableCards] = useState<string[]>([])
     const [combination, setCombination] = useState('');
@@ -68,6 +70,9 @@ const Table: React.FC = () => {
             socket.on('combination', combination => setCombination(combination));
             socket.on('round_pot', pot => setGameMsg(`POT: ${pot}P$`));
             socket.on('bet_response', msg => addToast(msg));
+            socket.on('timer', player => {
+                setTurnMsg(`Vez de ${player.name}. ${player.timeToPlay}s`)
+            });
             socket.on('your_turn', () => addToast('Sua vez de jogar!', 'info'));
             socket.on('error_msg', msg => addToast(msg, 'error'));
             socket.on('winner', async winnerId => {
@@ -127,6 +132,11 @@ const Table: React.FC = () => {
                 justifyContent="center"
             >
                 <Heading
+                    as="h1"
+                    marginBottom={2}
+                >{turnMsg}</Heading>
+                <Heading
+                    as="h2"
                     marginBottom={2}
                 >{gameMsg}</Heading>
                 <Box
@@ -178,6 +188,7 @@ const Table: React.FC = () => {
                             flexDir="row"
                             top="24"
                             alignItems="center"
+                            opacity={player.folded ? "0.3" : "1"}
                             margin={2}
                         >
                             <Box
@@ -194,7 +205,12 @@ const Table: React.FC = () => {
                                 src={player.avatarURL}
                                 >
                                 </Avatar>
-                                {player.balance}
+                                <Box>
+                                    {player.name}
+                                </Box>
+                                <Box>
+                                    {player.balance}
+                                </Box>
                             </Box>
                         </Flex>
                     )
@@ -208,6 +224,7 @@ const Table: React.FC = () => {
                         alignSelf="flex-end"
                         top="24"
                         alignItems="center"
+                        opacity={player.folded ? "0.3" : "1"}
                         margin={2}
                       >
                         <Avatar
@@ -233,7 +250,7 @@ const Table: React.FC = () => {
                               fontWeight="bold"
                               color="green.500"
                             >
-                              {player.email}
+                              {player.name}
                             </Box>
                             <Box>
                               {player.balance}P$
@@ -317,31 +334,19 @@ const Table: React.FC = () => {
                     width="100%"
                     marginBottom={4}
                 >
-                    <Box
-                        display="flex"
-                        alignItems="center"
-                        justifyContent="center"
-                        backgroundColor="gray.100"
+                    <Input
+                        width="200px"
+                        margin={3}
+                        type="number"
+                        background="gray.600"
                         height="40px"
-                        width="250px"
-                        borderRadius="md"
-                    >
-                        <Input
-                            appearance="none"
-                            width="200px"
-                            margin={3}
-                            type="range"
-                            min={table?.bigBlind}
-                            max={user?.balance}
-                            background="gray.600"
-                            height="3px"
-                            border="none"
-                            outline="none"
-                            _focus={{}}
-                            onChange={event => setBetInputValue(event.target.value)}
-                            value={betInputValue}
-                        />
-                    </Box>
+                        border="none"
+                        outline="none"
+                        _focus={{}}
+                        onChange={event => setBetInputValue(event.target.value)}
+                        value={betInputValue}
+                        placeholder="000"
+                    />
                     <Button
                         margin={3}
                         display="flex"
@@ -354,7 +359,7 @@ const Table: React.FC = () => {
                         _hover={{ backgroundColor: "purple.600" }}
                         _focus={{}}
                     >
-                        Bet {betInputValue}P$
+                        Bet
                     </Button>
 
                     <Button

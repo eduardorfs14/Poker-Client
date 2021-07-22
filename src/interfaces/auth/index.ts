@@ -1,5 +1,6 @@
 export type User = {
   id: string;
+  name: string;
   email: string;
   balance: number;
   avatar_url: string;
@@ -11,6 +12,7 @@ export type SignInRequestData = {
 }
 
 export type SignUpRequestData = {
+  name: string;
   email: string;
   password: string;
 }

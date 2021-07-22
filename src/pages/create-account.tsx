@@ -60,9 +60,18 @@ export default function Home() {
         </Heading>
 
         <Input
+          {...register('name')}
+          name="name"
+          placeholder="Nome"
+          type="text"
+          marginTop={2}
+        />
+
+        <Input
           {...register('email')}
           name="email"
           placeholder="E-mail"
+          type="email"
           marginTop={2}
         />
 
