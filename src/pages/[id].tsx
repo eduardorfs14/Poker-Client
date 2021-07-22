@@ -78,11 +78,11 @@ const Table: React.FC = () => {
             socket.on('winner', async winnerId => {
                 const { data } = await supabase
                     .from('users')
-                    .select('email')
+                    .select('name')
                     .eq('id', winnerId);
                     
                 if (data) {
-                    setGameMsg(`Vencedor da rodada: ${data[0].email}`)
+                    setGameMsg(`Vencedor da rodada: ${data[0].name}`)
                 }
             });
 
