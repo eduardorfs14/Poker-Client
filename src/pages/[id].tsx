@@ -69,7 +69,7 @@ const Table: React.FC = () => {
             socket.on('table_cards', tableCards => setTableCards(tableCards));
             socket.on('combination', combination => setCombination(combination));
             socket.on('round_pot', pot => setGameMsg(`POT: ${pot}P$`));
-            socket.on('bet_response', msg => addToast(msg));
+            socket.on('bet_response', msg => addToast(msg, 'info'));
             socket.on('timer', player => {
                 setTurnMsg(`Vez de ${player.name}. ${player.timeToPlay}s`)
             });
