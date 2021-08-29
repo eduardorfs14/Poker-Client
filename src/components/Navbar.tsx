@@ -52,6 +52,7 @@ const Navbar: React.FC<FlexProps> = (props) => {
   }
 
   async function addBalance() {
+    const balanceToAdd = 10000;
     const { data } = await supabase
       .from('users')
       .select('balance')
@@ -63,7 +64,7 @@ const Navbar: React.FC<FlexProps> = (props) => {
 
     await supabase
       .from('users')
-      .update({ balance: data[0].balance + 10000 })
+      .update({ balance: data[0].balance + balanceToAdd })
       .eq('id', user?.id);
 
     supabase
@@ -76,7 +77,7 @@ const Navbar: React.FC<FlexProps> = (props) => {
         }
 
         setUser(data.data[0])
-      })
+      });
   }
 
   return (

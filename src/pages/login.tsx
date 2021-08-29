@@ -8,8 +8,10 @@ import { Button } from '@chakra-ui/button';
 import Input from '../components/Input';
 import { AuthContext } from '../contexts/auth/AuthContext';
 import { SignInRequestData } from '../interfaces/auth';
+import { useToast } from '@chakra-ui/react';
 
-export default function Home() {
+export default function Login() {
+  const toast = useToast();
   const { register, handleSubmit } = useForm();
   const { signIn } = useContext(AuthContext)
 
@@ -18,9 +20,24 @@ export default function Home() {
       await signIn(data);
       Router.push('/');
     } catch(error) {
-      console.log(error);
+      addToast(error.message, 'error');
       return;
     }
+  }
+
+  function addToast(
+    description: string, 
+    status: "info" | "warning" | "success" | "error" | undefined = 'success', 
+    title?: string
+  ) {
+      toast({
+          title,
+          description,
+          status,
+          duration: 3000,
+          isClosable: true,
+          position: "top-right"
+      })
   }
 
   return (

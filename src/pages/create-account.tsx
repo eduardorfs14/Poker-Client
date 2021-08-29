@@ -3,7 +3,7 @@ import Router from 'next/router';
 import { Grid, Flex, Link, Text } from '@chakra-ui/layout';
 import { useContext } from 'react';
 import { useForm } from 'react-hook-form';
-import { Heading } from '@chakra-ui/react';
+import { Heading, toast, useToast } from '@chakra-ui/react';
 import { Button } from '@chakra-ui/button';
 
 
@@ -12,6 +12,7 @@ import { SignUpRequestData } from '../interfaces/auth';
 import { AuthContext } from '../contexts/auth/AuthContext';
 
 export default function Home() {
+  const toast = useToast();
   const { register, handleSubmit } = useForm();
   const { signUp } = useContext(AuthContext)
 
@@ -20,9 +21,24 @@ export default function Home() {
       await signUp(data);
       Router.push('/');
     } catch(error) {
-      console.log(error);
+      addToast(error.message, 'error');
       return;
     }
+  }
+
+  function addToast(
+    description: string, 
+    status: "info" | "warning" | "success" | "error" | undefined = 'success', 
+    title?: string
+  ) {
+      toast({
+          title,
+          description,
+          status,
+          duration: 3000,
+          isClosable: true,
+          position: "top-right"
+      })
   }
 
   return (

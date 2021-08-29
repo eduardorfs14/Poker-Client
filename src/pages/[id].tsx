@@ -9,6 +9,7 @@ import { supabase } from "../utils/supabaseClient";
 import { useRouter } from "next/router";
 import { AuthContext } from "../contexts/auth/AuthContext";
 import { io, Socket } from "socket.io-client";
+import ChakraModal, { PlayerEndRoundInfo } from "../components/ChakraModal";
 
 type TableType = {
     id: string;
@@ -25,24 +26,30 @@ type Player = {
     name: string;
     email: string;
     balance: number;
+    totalBetValueOnRound: number;
     position: string;
     folded: boolean;
-    avatarURL: string;
+    avatar_url: string;
     cards: string[]
 }
+
+export let socket: Socket;
 
 const Table: React.FC = () => {
     const { user } = useContext(AuthContext);
 
     const [betInputValue, setBetInputValue] = useState('0');
-    const [socket, setSocket] = useState<Socket>();
+    const [socketState, setSocketState] = useState<Socket>();
     const [player, setPlayer] = useState<Player>();
     const [players, setPlayers] = useState<Player[]>();
+    const [minBetMsg, setMinBetMsg] = useState('');
     const [gameMsg, setGameMsg] = useState('');
     const [turnMsg, setTurnMsg] = useState('');
     const [table, setTable] = useState<TableType | null>(null);
     const [tableCards, setTableCards] = useState<string[]>([])
     const [combination, setCombination] = useState('');
+    const [shouldLoadModal, setShouldLoadModal] = useState(false);
+    const [modalInfo, setModalInfo] = useState<PlayerEndRoundInfo[]>();
 
     const toast = useToast();
 
@@ -60,37 +67,54 @@ const Table: React.FC = () => {
             });
         }
 
-        const socket = io(process.env.NEXT_PUBLIC_API_URL ? process.env.NEXT_PUBLIC_API_URL : '');
+        socket = io(process.env.NEXT_PUBLIC_API_URL ? process.env.NEXT_PUBLIC_API_URL : '');
         socket.on('connect', () => {
             socket.on('round_already_started', msg => addToast(msg));
 
+            socket.on('min_bet', minBet => setMinBetMsg(`Aposta mínima: ${minBet}P$`));
             socket.on('player', player => setPlayer(player));
             socket.on('all_players', players => setPlayers(players));
             socket.on('table_cards', tableCards => setTableCards(tableCards));
             socket.on('combination', combination => setCombination(combination));
-            socket.on('round_pot', pot => setGameMsg(`POT: ${pot}P$`));
+            socket.on('round_pot', pot => {
+                const tempo_intervalo = 5; //ms -> define a velocidade da animação
+                const tempo = 4000; //ms -> define o tempo total da animaçao
+
+                const count_to = parseInt(pot);
+                const intervalos = tempo / tempo_intervalo; //quantos passos de animação tem
+                const incremento = count_to / intervalos; //quanto cada contador deve aumentar
+                const el = document.querySelector('.counter-up');
+                if (!el) return;
+                let valor = pot;
+                
+                let timer = setInterval(function() {
+                    if (valor >= count_to) { // se já contou tudo tem de parar o timer
+                        valor = count_to;
+                        clearInterval(timer);
+                    }
+                    
+                    const text = `POT: ${valor.toFixed(0)}P$`
+                    const formatedText = text.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1.");
+                    el.innerHTML = formatedText;
+                    valor += incremento;
+                }, tempo_intervalo);
+            });
             socket.on('bet_response', msg => addToast(msg, 'info'));
-            socket.on('timer', player => {
-                setTurnMsg(`Vez de ${player.name}. ${player.timeToPlay}s`)
+            socket.on('timer', playerWithTimer => {
+                setTurnMsg(`Vez de ${playerWithTimer.name}. ${playerWithTimer.timeToPlay}s`);
             });
             socket.on('your_turn', () => addToast('Sua vez de jogar!', 'info'));
             socket.on('error_msg', msg => addToast(msg, 'error'));
-            socket.on('winner', async winnerId => {
-                const { data } = await supabase
-                    .from('users')
-                    .select('name')
-                    .eq('id', winnerId);
-                    
-                if (data) {
-                    setGameMsg(`Vencedor da rodada: ${data[0].name}`)
-                }
+            socket.on('round_result', resultInfo => {
+                setModalInfo(resultInfo);
+                setShouldLoadModal(true);
             });
 
             setTimeout(() => {
                 socket.emit('join_table', tableId);
             }, 1000);
         })
-        setSocket(socket);
+        setSocketState(socket);
     }, [tableId]);
 
     function joinTable() {
@@ -138,7 +162,12 @@ const Table: React.FC = () => {
                 <Heading
                     as="h2"
                     marginBottom={2}
+                    className="counter-up"
                 >{gameMsg}</Heading>
+                <Heading
+                    as="h3"
+                    marginBottom={2}
+                >{minBetMsg}</Heading>
                 <Box
                     display="flex"
                     alignItems="center"
@@ -163,7 +192,6 @@ const Table: React.FC = () => {
                             />
                         )
                     })}
-
                 </Box>
 
                 <Box
@@ -181,7 +209,7 @@ const Table: React.FC = () => {
                         <Flex
                             key={player.id}
                             position="relative"
-                            width="80px"
+                            width="180px"
                             borderRadius="48px"
                             alignSelf="flex-end"
                             display="flex"
@@ -202,14 +230,23 @@ const Table: React.FC = () => {
                                 border="solid 4px #ddd"
                                 width="60px"
                                 height="60px"
-                                src={player.avatarURL}
+                                src={player.avatar_url}
                                 >
                                 </Avatar>
-                                <Box>
+                                <Box
+                                    color="green.500"
+                                    fontWeight="bold"
+                                >
                                     {player.name}
                                 </Box>
                                 <Box>
                                     {player.balance}
+                                </Box>
+                                <Box>
+                                    Bet: {player.totalBetValueOnRound}
+                                </Box>
+                                <Box>
+                                    Pos: {player.position}
                                 </Box>
                             </Box>
                         </Flex>
@@ -232,7 +269,7 @@ const Table: React.FC = () => {
                           border="solid 4px #ddd"
                           width="60px"
                           height="60px"
-                          src={player.avatarURL}
+                          src={player.avatar_url}
                         >
                         </Avatar>
                         <Box
@@ -255,12 +292,18 @@ const Table: React.FC = () => {
                             <Box>
                               {player.balance}P$
                             </Box>
+                            <Box>
+                                Bet: {player.totalBetValueOnRound}
+                            </Box>
+                            <Box>
+                                Pos: {player.position}
+                            </Box>
                           </Box>
                         <Box
                             display="flex"
                             flexDirection="row"
                             zIndex="200"
-                            marginLeft={2}
+                            marginLeft={4}
                         >
                             {player.cards?.map((card: string, index) => {
                                 const value = card.split('')[0]
@@ -391,9 +434,10 @@ const Table: React.FC = () => {
                     >
                         Check / Call
                     </Button>
-
                 </Box>
             </Flex>
+
+            { shouldLoadModal ? <ChakraModal playersEndRoundInfo={modalInfo} /> : '' }
         </div>
         ) : (
             <div>
