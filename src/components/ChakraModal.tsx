@@ -38,19 +38,6 @@ const ChakraModal = ({ playersEndRoundInfo }: ChakraModalProps) => {
                 <ModalBody display="flex" justifyContent="center" alignItems="center" marginBottom={3}>
                   <Avatar src={player.avatar_url} marginRight={2} />
                   {`${player.name} apostou ${player.totalBetValue}P$. ${player.folded ? 'FOLDOU.' : ''} Lucrou: ${player.profit}P$.`}
-                  {player.cards.map((card, index) => {
-                    return (
-                      <PokerCard
-                        key={index}
-                        height="90px" 
-                        width="60px"
-                        transform="rotate(0deg)"
-                        fontSize="md"
-                        datavalue={`${card[0]} ${card[1]}`}
-                        margin={2}
-                      />
-                    )
-                  })}
                 </ModalBody>
               )
             })}
